@@ -21,7 +21,7 @@ export default props => {
         return (
             <TouchableOpacity
                 style={styles.right}
-                onPress={() => console.warn('excluindo')}
+                onPress={() => props.onDelete(props.id)}
             >
                 <FontAwesome name="trash" size={30} color="white" />
             </TouchableOpacity>

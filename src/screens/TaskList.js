@@ -14,6 +14,7 @@ import todayImage from '../../assets/img/today.jpg'
 
 import axios from 'axios'
 import { API_CONFIG } from '../config/api'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 const taskDB = []
 
@@ -43,17 +44,25 @@ export default function TaskList() {
         }
     }
 
-    const toggleTask = (taskId) => {
+    const toggleTask = async (taskId) => {
 
         const taskList = [...tasks]
+
+        let taskUpdate = null
 
         taskList.forEach(task => {
             if (task.id === taskId) {
                 task.doneAt = task.doneAt ? null : new Date()
+                taskUpdate = task
             }
         })
 
-        setTasks([...taskList])
+        try {
+            const response = await axios.put(`${API_CONFIG.BASE_URL}/tasks/${taskUpdate.id}`, taskUpdate)
+        } catch (error) {
+            console.error('Erro ao atualizar o registro', error)
+        }
+        getTasks()
     }
 
     const addTask = async newTask => {
@@ -65,51 +74,61 @@ export default function TaskList() {
             doneAt: null
         }
 
-        try{
+        try {
             const response = await axios.post(`${API_CONFIG.BASE_URL}/tasks`, taskAdd)
-        }catch(error){
+        } catch (error) {
             console.error('Erro ao inserir o dado', error)
         }
+        getTasks()
         setShowAddTask(false)
     }
-
+    const deleteTask = async id => {
+        try {
+            const response = await axios.delete(`${API_CONFIG.BASE_URL}/tasks/${id}`)
+        } catch (error) {
+            console.error('Erro ao atualizar o registro', error)
+        }
+        getTasks()
+    }
     return (
-        <View style={styles.container}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <View style={styles.container}>
 
-            <AddTask
-                isVisible={showAddTask}
-                onCancel={() => setShowAddTask(false)}
-                onSave={addTask}
-            />
-
-            <ImageBackground source={todayImage} style={styles.background}>
-                <View style={styles.iconBar}>
-                    <TouchableOpacity>
-                        <FontAwesome name="eye" size={24} color="white" />
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.titleBar}>
-                    <Text style={styles.title}>Hoje</Text>
-                    <Text style={styles.subtitle}>{today}</Text>
-                </View>
-            </ImageBackground>
-
-            <View style={styles.taskList}>
-                <FlatList
-                    data={tasks}
-                    keyExtractor={item => `${item.id}`}
-                    renderItem={({ item }) =>
-                        <Task {...item} onToggleTask={toggleTask} />}
+                <AddTask
+                    isVisible={showAddTask}
+                    onCancel={() => setShowAddTask(false)}
+                    onSave={addTask}
                 />
+
+                <ImageBackground source={todayImage} style={styles.background}>
+                    <View style={styles.iconBar}>
+                        <TouchableOpacity>
+                            <FontAwesome name="eye" size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.titleBar}>
+                        <Text style={styles.title}>Hoje</Text>
+                        <Text style={styles.subtitle}>{today}</Text>
+                    </View>
+                </ImageBackground>
+
+                <View style={styles.taskList}>
+                    <FlatList
+                        data={tasks}
+                        keyExtractor={item => `${item.id}`}
+                        renderItem={({ item }) =>
+                            <Task {...item} onToggleTask={toggleTask} onDelete={deleteTask} />}
+                    />
+                </View>
+
+                <TouchableOpacity style={styles.addButton}
+                    activeOpacity={0.7}
+                    onPress={() => setShowAddTask(true)}>
+                    <FontAwesome name='plus' size={20} color={'white'} />
+                </TouchableOpacity>
+
             </View>
-
-            <TouchableOpacity style={styles.addButton}
-                activeOpacity={0.7}
-                onPress={() => setShowAddTask(true)}>
-                <FontAwesome name='plus' size={20} color={'white'} />
-            </TouchableOpacity>
-
-        </View>
+        </GestureHandlerRootView>
     )
 }
 
